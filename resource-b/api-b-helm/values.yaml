@@ -1,0 +1,84 @@
+# Default values for your-app.
+
+# deployment
+
+# Autoscaling configuration
+autoscaling:
+  enabled: true  # Set to true to enable Horizontal Pod Autoscaler
+  minReplicas: 2  # Minimum number of replicas
+  maxReplicas: 5  # Maximum number of replicas
+  targetCPUUtilizationPercentage: 80  # Target CPU utilization percentage for scaling
+
+# initial pods count
+replicaCount: 2
+
+# docker image run in container
+image:
+  repository: resource-b-image  # Update with your Docker image
+  pullPolicy: IfNotPresent
+  tag: latest  # Specify your image tag
+
+# Optionally configure liveness and readiness probes
+livenessProbe:
+  httpGet:
+    path: /actuator/health
+    port: 8080
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health
+    port: 8080
+  initialDelaySeconds: 30  # Adjust as necessary
+  periodSeconds: 10
+  timeoutSeconds: 5
+
+resources:
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+  requests:
+    cpu: "250m"
+    memory: "256Mi"
+
+# service: name, type, port
+service:
+  name: resource-b-service
+  port: 8080
+  type: ClusterIP  # You can change this to NodePort/LoadBalancer if needed
+
+serviceAccount:
+  create: true
+  name: resource-service-account
+  automount: true
+  annotations: {}
+
+ingress:
+  enabled: true
+  className: nginx  # Specify your Ingress class, e.g., nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: resource-b-domain.local  # Your custom domain
+      paths:
+        - path: /
+          pathType: Prefix  # Or Exact
+  port: 8080
+
+  # Ingress Class Resource Metadata
+  ingressClassResource:
+    enabled: true  # Ensure that the IngressClass resource is enabled
+    name: nginx  # Name of the IngressClass, should match the existing IngressClass name
+    metadata:
+      labels:
+        app.kubernetes.io/managed-by: "Helm"
+      annotations:
+        meta.helm.sh/release-name: "my-nginx"  # Your release name
+        meta.helm.sh/release-namespace: "default"  # Your release namespace
+
+# Configure logging
+logLevel: info  # Change to debug for more detailed logs
+
+# Specify environment variables for service-b
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: dev  # Change this to your desired profile
