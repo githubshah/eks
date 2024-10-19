@@ -10,7 +10,7 @@ autoscaling:
   targetCPUUtilizationPercentage: 80  # Target CPU utilization percentage for scaling
 
 # initial pods count
-replicaCount: 2
+replicaCount: 3
 
 # docker image run in container
 image:
@@ -42,9 +42,10 @@ resources:
 
 # service: name, type, port
 service:
-  name: resource-b-service
+  name: api-b-helm  # Updated to match the deployment name
   port: 8080
-  type: ClusterIP  # You can change this to NodePort/LoadBalancer if needed
+  targetPort: 8080
+  type: ClusterIP  # Keep this as ClusterIP
 
 serviceAccount:
   create: true
@@ -54,26 +55,20 @@ serviceAccount:
 
 ingress:
   enabled: true
-  className: nginx  # Specify your Ingress class, e.g., nginx
+  className: nginx
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-next-upstream: "error timeout http_502 http_504"
   hosts:
-    - host: resource-b-domain.local  # Your custom domain
+    - host: resource-b-domain.local
       paths:
         - path: /
-          pathType: Prefix  # Or Exact
-  port: 8080
-
-  # Ingress Class Resource Metadata
-  ingressClassResource:
-    enabled: true  # Ensure that the IngressClass resource is enabled
-    name: nginx  # Name of the IngressClass, should match the existing IngressClass name
-    metadata:
-      labels:
-        app.kubernetes.io/managed-by: "Helm"
-      annotations:
-        meta.helm.sh/release-name: "my-nginx"  # Your release name
-        meta.helm.sh/release-namespace: "default"  # Your release namespace
+          pathType: Prefix
+          backend:
+            service:
+              name: api-b-helm  # Updated to match the service name
+              port:
+                number: 8080
 
 # Configure logging
 logLevel: info  # Change to debug for more detailed logs
