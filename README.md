@@ -18,7 +18,7 @@ cd under resource-b/api-B-helm folder where values.yaml reside.
 helm install api-b-helm .
 
 for testing purpose
-kubectl port-forward svc/<service-name> 8081:8080
+kubectl port-forward svc/api-b-helm 8081:8080
 Verify
 http://localhost:8081
 
